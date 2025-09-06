@@ -1,4 +1,3 @@
-// app/page.tsx
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -9,11 +8,11 @@ export default function Page() {
 
   const [tickerMs, setTickerMs] = useState(15000);
   const [paused, setPaused] = useState(false);
-  const [articles, setArticles] = useState<{title?: string; url?: string; publishedAt?: string}[]>([]);
+  const [articles, setArticles] = useState<{ title?: string; url?: string; publishedAt?: string }[]>([]);
   const [idx, setIdx] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const timerRef = useRef<any>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -44,26 +43,24 @@ export default function Page() {
   }, []);
 
   useEffect(() => {
-    clearInterval(timerRef.current);
+    if (timerRef.current) clearInterval(timerRef.current);
     if (articles.length && !paused) {
-      timerRef.current = setInterval(() => {
-        setIdx((i) => (i + 1) % articles.length);
-      }, tickerMs);
+      timerRef.current = setInterval(() => setIdx(i => (i + 1) % articles.length), tickerMs);
     }
-    return () => clearInterval(timerRef.current);
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [articles, tickerMs, paused]);
 
   const current = articles[idx] || {};
 
-  function goPrev() { if (articles.length) setIdx((i) => (i - 1 + articles.length) % articles.length); }
-  function goNext() { if (articles.length) setIdx((i) => (i + 1) % articles.length); }
-  function togglePause() { setPaused((p) => !p); }
+  const goPrev = () => articles.length && setIdx(i => (i - 1 + articles.length) % articles.length);
+  const goNext = () => articles.length && setIdx(i => (i + 1) % articles.length);
+  const togglePause = () => setPaused(p => !p);
 
   return (
     <>
       {/* Top: timer segmented pills */}
       <div className="timerbar" role="tablist" aria-label="Auto-scroll interval">
-        {TICK_OPTIONS.map((ms) => (
+        {TICK_OPTIONS.map(ms => (
           <button
             key={ms}
             role="tab"
@@ -80,22 +77,25 @@ export default function Page() {
       {/* Bottom: large prev/pause/next pill with custom SVG icons */}
       <div className="controlbar" role="toolbar" aria-label="Playback controls">
         <button className="ctrlbtn" title="Previous" aria-label="Previous" onClick={goPrev}>
+          {/* Left Arrow */}
           <svg className="icon" viewBox="0 0 24 24" aria-hidden="true">
             <path className="icon-stroke" d="M15 18l-6-6 6-6" />
           </svg>
         </button>
         <button
-          className="ctrlbtn"
+          className="ctrlbtn pause"
           title={paused ? "Resume" : "Pause"}
           aria-label={paused ? "Resume" : "Pause"}
           aria-pressed={paused}
           onClick={togglePause}
         >
           {paused ? (
+            // Play
             <svg className="icon" viewBox="0 0 24 24" aria-hidden="true">
               <path className="icon-stroke" d="M8 5v14l11-7z" fill="currentColor" stroke="none" />
             </svg>
           ) : (
+            // Pause
             <svg className="icon" viewBox="0 0 24 24" aria-hidden="true">
               <rect x="6" y="4" width="4" height="16" fill="currentColor" />
               <rect x="14" y="4" width="4" height="16" fill="currentColor" />
@@ -103,6 +103,7 @@ export default function Page() {
           )}
         </button>
         <button className="ctrlbtn" title="Next" aria-label="Next" onClick={goNext}>
+          {/* Right Arrow */}
           <svg className="icon" viewBox="0 0 24 24" aria-hidden="true">
             <path className="icon-stroke" d="M9 6l6 6-6 6" />
           </svg>
