@@ -1,103 +1,124 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useEffect, useRef, useState } from "react";
+
+export default function Page() {
+  const RSS_URL = "https://news.google.com/rss?hl=en-IN&gl=IN&ceid=IN:en";
+  const TICK_OPTIONS = [5000, 10000, 15000, 30000, 60000];
+
+  const [tickerMs, setTickerMs] = useState(15000);
+  const [paused, setPaused] = useState(false);
+  const [articles, setArticles] = useState<{title?: string; url?: string; publishedAt?: string}[]>([]);
+  const [idx, setIdx] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const timerRef = useRef<any>(null);
+
+  useEffect(() => {
+    (async () => {
+      setLoading(true); setError("");
+      try {
+        async function fetchTextWithFallbacks(url: string): Promise<string> {
+          try { const r = await fetch(url, { cache: "no-store" }); if (r.ok) return await r.text(); } catch {}
+          try { const r2 = await fetch(`https://r.jina.ai/${url.replace(/^https?:\/\//, "https://")}`); if (r2.ok) return await r2.text(); } catch {}
+          try { const r3 = await fetch(`https://allorigins.hexlet.app/raw?url=${encodeURIComponent(url)}`); if (r3.ok) return await r3.text(); } catch {}
+          throw new Error("Unable to fetch RSS");
+        }
+        const text = await fetchTextWithFallbacks(RSS_URL);
+        const xml = new DOMParser().parseFromString(text, "application/xml");
+        const items = Array.from(xml.querySelectorAll("item"));
+        const list = items.map((it) => ({
+          title: it.querySelector("title")?.textContent || undefined,
+          url: it.querySelector("link")?.textContent || undefined,
+          publishedAt: it.querySelector("pubDate")?.textContent || undefined,
+        })).filter(a => a.title && a.url);
+        if (!list.length) throw new Error("No articles found");
+        setArticles(list);
+      } catch (e: any) {
+        setError(e?.message || "Failed to load");
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
+    clearInterval(timerRef.current);
+    if (articles.length && !paused) {
+      timerRef.current = setInterval(() => {
+        setIdx((i) => (i + 1) % articles.length);
+      }, tickerMs);
+    }
+    return () => clearInterval(timerRef.current);
+  }, [articles, tickerMs, paused]);
+
+  const current = articles[idx] || {};
+
+  function goPrev() { if (articles.length) setIdx((i) => (i - 1 + articles.length) % articles.length); }
+  function goNext() { if (articles.length) setIdx((i) => (i + 1) % articles.length); }
+  function togglePause() { setPaused((p) => !p); }
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <>
+      {/* Top: timer segmented pills */}
+      <div className="timerbar" role="tablist" aria-label="Auto-scroll interval">
+        {TICK_OPTIONS.map((ms) => (
+          <button
+            key={ms}
+            role="tab"
+            aria-pressed={tickerMs === ms}
+            className="timerbtn"
+            onClick={() => setTickerMs(ms)}
+            title={`${ms/1000}s`}
+          >
+            {ms / 1000}s
+          </button>
+        ))}
+      </div>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+      {/* Bottom: large prev/pause/next pill with custom SVG icons */}
+      <div className="controlbar" role="toolbar" aria-label="Playback controls">
+        <button className="ctrlbtn" title="Previous" aria-label="Previous" onClick={goPrev}>
+          <svg className="icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path className="icon-stroke" d="M15 18l-6-6 6-6" />
+          </svg>
+        </button>
+        <button
+          className="ctrlbtn"
+          title={paused ? "Resume" : "Pause"}
+          aria-label={paused ? "Resume" : "Pause"}
+          aria-pressed={paused}
+          onClick={togglePause}
+        >
+          {paused ? (
+            <svg className="icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path className="icon-stroke" d="M8 5v14l11-7z" fill="currentColor" stroke="none" />
+            </svg>
+          ) : (
+            <svg className="icon" viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="6" y="4" width="4" height="16" fill="currentColor" />
+              <rect x="14" y="4" width="4" height="16" fill="currentColor" />
+            </svg>
+          )}
+        </button>
+        <button className="ctrlbtn" title="Next" aria-label="Next" onClick={goNext}>
+          <svg className="icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path className="icon-stroke" d="M9 6l6 6-6 6" />
+          </svg>
+        </button>
+      </div>
+
+      <main className="main">
+        <div className="wrap">
+          {loading && <div className="status">Loading…</div>}
+          {!loading && error && <div className="status">Failed to load — {error}</div>}
+          {!loading && !error && (
+            <a href={current?.url || '#'} target="_blank" rel="noopener noreferrer" className="link">
+              <h1 className="title">{current?.title || 'Untitled'}</h1>
+            </a>
+          )}
         </div>
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+    </>
   );
 }
