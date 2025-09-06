@@ -1,14 +1,4 @@
-// app/layout.tsx
-export const metadata = { title: "India News — Auto-Scroll" };
-
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <html lang="en">
-      <body>{children}</body>
-    </html>
-  );
-}
- /* app/globals.css */
+/* app/globals.css */
 html, body, #__next { height: 100%; }
 body { margin: 0; background: #fff; color: #000; }
 
