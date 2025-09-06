@@ -1,26 +1,31 @@
-@import "tailwindcss";
+html, body, #__next { height: 100%; }
+body { margin: 0; background: #fff; color: #000; }
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* Top timer pills */
+.timerbar { position: fixed; top: 12px; left: 50%; transform: translateX(-50%);
+  display: flex; gap: 10px; background: #eef2f7; border-radius: 9999px; padding: 8px;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.08); z-index: 10; }
+.timerbtn { border: 0; background: transparent; color: #5b6574; font-weight: 800;
+  border-radius: 9999px; padding: 8px 14px; cursor: pointer; font-size: 14px; }
+.timerbtn[aria-pressed="true"] { background: #fff; color: #000; box-shadow: 0 2px 6px rgba(0,0,0,.15); }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+/* Bottom big controls */
+.controlbar { position: fixed; bottom: 16px; left: 16px; right: 16px;
+  display: flex; justify-content: space-between; align-items: center;
+  background: #eef2f7; border-radius: 9999px; padding: 16px 20px;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.08); z-index: 10; }
+.ctrlbtn { width: 80px; height: 80px; border-radius: 9999px; border: 0; background: #fff; color: #000;
+  display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0,0,0,.12); }
+.ctrlbtn[aria-pressed="true"] { background: #000; color: #fff; }
+.ctrlbtn:active { transform: scale(0.98); }
+.icon { width: 32px; height: 32px; }
+.icon-stroke { stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-}
+/* Main headline */
+.main { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
+.wrap { max-width: 1100px; width: 100%; text-align: center; }
+.title { font-weight: 900; font-size: clamp(28px, 6vw, 64px); line-height: 1.2; margin: 0; }
+.link { color: #000; text-decoration: none; }
+.link:hover, .link:focus { text-decoration: underline; }
+.status { font-size: 14px; opacity: 0.7; }
