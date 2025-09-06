@@ -1,3 +1,4 @@
+// app/page.tsx
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -51,7 +52,6 @@ export default function Page() {
   }, [articles, tickerMs, paused]);
 
   const current = articles[idx] || {};
-
   const goPrev = () => articles.length && setIdx(i => (i - 1 + articles.length) % articles.length);
   const goNext = () => articles.length && setIdx(i => (i + 1) % articles.length);
   const togglePause = () => setPaused(p => !p);
@@ -77,7 +77,6 @@ export default function Page() {
       {/* Bottom: large prev/pause/next pill with custom SVG icons */}
       <div className="controlbar" role="toolbar" aria-label="Playback controls">
         <button className="ctrlbtn" title="Previous" aria-label="Previous" onClick={goPrev}>
-          {/* Left Arrow */}
           <svg className="icon" viewBox="0 0 24 24" aria-hidden="true">
             <path className="icon-stroke" d="M15 18l-6-6 6-6" />
           </svg>
@@ -90,37 +89,4 @@ export default function Page() {
           onClick={togglePause}
         >
           {paused ? (
-            // Play
             <svg className="icon" viewBox="0 0 24 24" aria-hidden="true">
-              <path className="icon-stroke" d="M8 5v14l11-7z" fill="currentColor" stroke="none" />
-            </svg>
-          ) : (
-            // Pause
-            <svg className="icon" viewBox="0 0 24 24" aria-hidden="true">
-              <rect x="6" y="4" width="4" height="16" fill="currentColor" />
-              <rect x="14" y="4" width="4" height="16" fill="currentColor" />
-            </svg>
-          )}
-        </button>
-        <button className="ctrlbtn" title="Next" aria-label="Next" onClick={goNext}>
-          {/* Right Arrow */}
-          <svg className="icon" viewBox="0 0 24 24" aria-hidden="true">
-            <path className="icon-stroke" d="M9 6l6 6-6 6" />
-          </svg>
-        </button>
-      </div>
-
-      <main className="main">
-        <div className="wrap">
-          {loading && <div className="status">Loading…</div>}
-          {!loading && error && <div className="status">Failed to load — {error}</div>}
-          {!loading && !error && (
-            <a href={current?.url || '#'} target="_blank" rel="noopener noreferrer" className="link">
-              <h1 className="title">{current?.title || 'Untitled'}</h1>
-            </a>
-          )}
-        </div>
-      </main>
-    </>
-  );
-}
