@@ -5,6 +5,9 @@ import { useEffect, useRef, useState } from "react";
 
 type Article = { title?: string; url?: string; publishedAt?: string };
 
+const RSS_URL = "https://news.google.com/rss?hl=en-IN&gl=IN&ceid=IN:en";
+const TICK_OPTIONS = [5000, 10000, 15000, 30000, 60000];
+
 function IconPrev() {
   return (
     <svg className="icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -36,9 +39,6 @@ function IconPlay() {
 }
 
 export default function Page() {
-  const RSS_URL = "https://news.google.com/rss?hl=en-IN&gl=IN&ceid=IN:en";
-  const TICK_OPTIONS = [5000, 10000, 15000, 30000, 60000];
-
   const [tickerMs, setTickerMs] = useState(15000);
   const [paused, setPaused] = useState(false);
   const [articles, setArticles] = useState<Article[]>([]);
@@ -114,4 +114,55 @@ export default function Page() {
 
   return (
     <>
-      {/
+      <div className="timerbar" role="tablist" aria-label="Auto-scroll interval">
+        {TICK_OPTIONS.map((ms) => (
+          <button
+            key={ms}
+            role="tab"
+            aria-pressed={tickerMs === ms}
+            className="timerbtn"
+            onClick={() => setTickerMs(ms)}
+            title={`${ms / 1000}s`}
+          >
+            {ms / 1000}s
+          </button>
+        ))}
+      </div>
+
+      <div className="controlbar" role="toolbar" aria-label="Playback controls">
+        <button className="ctrlbtn" title="Previous" aria-label="Previous" onClick={goPrev}>
+          <IconPrev />
+        </button>
+        <button
+          className="ctrlbtn pause"
+          title={paused ? "Resume" : "Pause"}
+          aria-label={paused ? "Resume" : "Pause"}
+          aria-pressed={paused}
+          onClick={togglePause}
+        >
+          {paused ? <IconPlay /> : <IconPause />}
+        </button>
+        <button className="ctrlbtn" title="Next" aria-label="Next" onClick={goNext}>
+          <IconNext />
+        </button>
+      </div>
+
+      <main className="main">
+        <div className="wrap">
+          {loading && <div className="status">Loading…</div>}
+          {!loading && error && <div className="status">Failed to load — {error}</div>}
+          {!loading && !error && (
+            <a
+              href={current?.url || "#"}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="link"
+            >
+              <h1 className="title">{current?.title || "Untitled"}</h1>
+            </a>
+          )}
+        </div>
+      </main>
+    </>
+  );
+}
