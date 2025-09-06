@@ -1,7 +1,9 @@
-export const metadata = { title: "India News — Auto-Scroll" };
-
+// app/layout.tsx
+import type { Metadata } from "next";
 import { Noto_Sans } from "next/font/google";
 import "./globals.css";
+
+export const metadata: Metadata = { title: "India News — Auto-Scroll" };
 
 const noto = Noto_Sans({ weight: "900", subsets: ["latin"] });
 
